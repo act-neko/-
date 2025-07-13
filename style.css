@@ -853,18 +853,30 @@ header h1 {
     
     .calendar-container {
         grid-template-columns: 1fr;
-        padding: 15px;
-        gap: 20px;
+        padding: 10px;
+        gap: 15px;
     }
     
     .calendar {
         font-size: 0.9rem;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
     }
     
     .calendar-day {
-        min-height: 50px;
+        min-height: 60px;
+        padding: 8px 2px;
+        font-size: 0.85rem;
+    }
+    
+    .calendar {
+        gap: 2px;
+    }
+    
+    .calendar-header {
         padding: 8px 4px;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
     }
     
     .meditation-timer {
@@ -943,5 +955,32 @@ header h1 {
     .sobriety-counter.today-counter {
         font-size: 0.7rem;
         padding: 2px 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-day {
+        min-height: 45px;
+        padding: 4px 1px;
+        font-size: 0.75rem;
+    }
+    
+    .calendar-header {
+        padding: 6px 2px;
+        font-size: 0.7rem;
+    }
+    
+    .calendar {
+        gap: 1px;
+    }
+    
+    header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .sobriety-counter {
+        font-size: 0.5rem;
+        padding: 1px 3px;
+        min-width: 14px;
     }
 }
