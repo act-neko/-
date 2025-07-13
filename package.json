@@ -1,0 +1,21 @@
+{
+  "name": "smart-calendar",
+  "version": "1.0.0",
+  "description": "スマートカレンダー - 予定管理、節約記録、断酒記録、瞑想タイマー機能付き",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve .",
+    "dev": "serve .",
+    "build": "echo 'Static site - no build needed'"
+  },
+  "keywords": [
+    "calendar",
+    "meditation",
+    "sobriety",
+    "savings",
+    "productivity"
+  ],
+  "author": "Claude AI",
+  "license": "MIT",
+  "homepage": "https://smart-calendar.vercel.app"
+}
