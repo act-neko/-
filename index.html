@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スマートカレンダー</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <h1>スマートカレンダー</h1>
+                <div class="header-buttons">
+                    <button id="sobrietyBtn" class="sobriety-btn">🚭 断酒設定</button>
+                    <button id="progressBtn" class="progress-btn">📊 進捗状況</button>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button id="prevMonth">&lt;</button>
+                <span id="currentMonth"></span>
+                <button id="nextMonth">&gt;</button>
+            </div>
+            <div id="sobrietyDisplay" class="sobriety-display" style="display: none;">
+                <span id="sobrietyDays">断酒0日目</span>
+                <span id="sobrietyMessage">頑張って続けましょう！</span>
+            </div>
+        </header>
+        
+        <div class="calendar-container">
+            <div class="calendar" id="calendar"></div>
+            
+            <div class="sidebar" id="sidebar">
+                <div class="day-info" id="dayInfo" style="display: none;">
+                    <h3 id="selectedDate"></h3>
+                    <div class="events" id="events"></div>
+                    <div class="button-group">
+                        <button id="addEventBtn">予定を追加</button>
+                        <button id="addSavingBtn">節約記録</button>
+                    </div>
+                    <div class="savings-info" id="savingsInfo"></div>
+                </div>
+                
+                <div class="savings-history" id="savingsHistory" style="display: none;">
+                    <h3>節約履歴</h3>
+                    <div class="savings-stats">
+                        <div class="stat-item">
+                            <span>今月の節約額</span>
+                            <span id="monthlyTotal">¥0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>累計節約額</span>
+                            <span id="totalSavings">¥0</span>
+                        </div>
+                    </div>
+                    <div class="history-list" id="historyList"></div>
+                </div>
+                
+                <div class="meditation-timer" id="meditationTimer">
+                    <h3>🧘‍♂️ 瞑想タイマー</h3>
+                    
+                    <div class="timer-display" id="timerDisplay">
+                        <div class="time-left" id="timeLeft">05:00</div>
+                        <div class="timer-status" id="timerStatus">時間を選択してください</div>
+                    </div>
+                    
+                    <div class="time-presets">
+                        <button class="preset-btn" data-minutes="3">3分</button>
+                        <button class="preset-btn" data-minutes="5">5分</button>
+                        <button class="preset-btn" data-minutes="10">10分</button>
+                        <button class="preset-btn" data-minutes="15">15分</button>
+                        <button class="preset-btn" data-minutes="20">20分</button>
+                    </div>
+                    
+                    <div class="timer-controls">
+                        <button id="startPauseBtn" class="timer-btn start-btn" disabled>開始</button>
+                        <button id="resetBtn" class="timer-btn reset-btn">リセット</button>
+                    </div>
+                    
+                    <div class="meditation-stats">
+                        <div class="stat-small">
+                            <span>今日の瞑想</span>
+                            <span id="todayMeditation">0分</span>
+                        </div>
+                        <div class="stat-small">
+                            <span>総瞑想時間</span>
+                            <span id="totalMeditation">0分</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="eventModal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>予定を追加</h3>
+            <input type="text" id="eventTitle" placeholder="予定のタイトル">
+            <textarea id="eventDescription" placeholder="詳細"></textarea>
+            <button id="saveEvent">保存</button>
+        </div>
+    </div>
+
+    <div class="modal" id="savingModal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>節約記録を追加</h3>
+            <input type="number" id="savingAmount" placeholder="節約金額（円）">
+            <select id="savingCategory">
+                <option value="食費">食費</option>
+                <option value="交通費">交通費</option>
+                <option value="娯楽費">娯楽費</option>
+                <option value="買い物">買い物</option>
+                <option value="光熱費">光熱費</option>
+                <option value="その他">その他</option>
+            </select>
+            <textarea id="savingDescription" placeholder="節約の内容"></textarea>
+            <button id="saveSaving">保存</button>
+        </div>
+    </div>
+
+    <div class="modal" id="sobrietyModal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>🚭 断酒設定</h3>
+            <p>断酒を開始した日付を設定してください</p>
+            <input type="date" id="sobrietyStartDate" placeholder="断酒開始日">
+            <div class="button-group">
+                <button id="setSobrietyStart">設定</button>
+                <button id="resetSobriety">リセット</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="progressModal" style="display: none;">
+        <div class="modal-content progress-modal-content">
+            <span class="close">&times;</span>
+            <h3>📊 節約・断酒進捗状況</h3>
+            
+            <div class="progress-stats">
+                <div class="progress-stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-details">
+                        <span class="stat-value" id="progressMonthlyTotal">¥0</span>
+                        <span class="stat-label">今月の節約額</span>
+                    </div>
+                </div>
+                
+                <div class="progress-stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-details">
+                        <span class="stat-value" id="progressTotalSavings">¥0</span>
+                        <span class="stat-label">累計節約額</span>
+                    </div>
+                </div>
+                
+                <div class="progress-stat-card">
+                    <div class="stat-icon">🚭</div>
+                    <div class="stat-details">
+                        <span class="stat-value" id="progressSobrietyDays">0日</span>
+                        <span class="stat-label">断酒継続日数</span>
+                    </div>
+                </div>
+                
+                <div class="progress-stat-card">
+                    <div class="stat-icon">💪</div>
+                    <div class="stat-details">
+                        <span class="stat-value" id="progressSobrietySaved">¥0</span>
+                        <span class="stat-label">断酒で節約</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="category-breakdown">
+                <h4>カテゴリ別内訳</h4>
+                <div id="categoryChart"></div>
+            </div>
+            
+            <div class="recent-history">
+                <h4>最近の節約履歴</h4>
+                <div class="progress-history-list" id="progressHistoryList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
