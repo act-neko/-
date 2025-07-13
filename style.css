@@ -847,13 +847,24 @@ header h1 {
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
     .calendar-container {
         grid-template-columns: 1fr;
+        padding: 15px;
+        gap: 20px;
+    }
+    
+    .calendar {
+        font-size: 0.9rem;
     }
     
     .calendar-day {
-        min-height: 60px;
-        padding: 10px;
+        min-height: 50px;
+        padding: 8px 4px;
+        font-size: 0.9rem;
     }
     
     .meditation-timer {
@@ -871,11 +882,34 @@ header h1 {
     .header-top {
         flex-direction: column;
         gap: 15px;
+        text-align: center;
     }
     
-    .progress-btn {
+    header h1 {
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+    }
+    
+    .header-buttons {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+    
+    .progress-btn,
+    .sobriety-btn {
         font-size: 0.9rem;
-        padding: 10px 16px;
+        padding: 12px 20px;
+        width: 100%;
+    }
+    
+    .nav-buttons {
+        gap: 15px;
+    }
+    
+    #currentMonth {
+        font-size: 1.2rem;
+        min-width: 150px;
     }
     
     .progress-stats {
@@ -885,5 +919,29 @@ header h1 {
     .progress-modal-content {
         margin: 10px;
         max-height: 95vh;
+        padding: 20px;
+    }
+    
+    .savings-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .meditation-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+    
+    .sobriety-counter {
+        font-size: 0.6rem;
+        padding: 1px 4px;
+        min-width: 16px;
+    }
+    
+    .sobriety-counter.today-counter {
+        font-size: 0.7rem;
+        padding: 2px 6px;
     }
 }
