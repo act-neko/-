@@ -166,11 +166,15 @@ class SmartCalendar {
                 const startDate = new Date(this.sobrietyStartDate);
                 startDate.setHours(0, 0, 0, 0);
                 
-                if (currentDay >= startDate && currentDay.getMonth() === month) {
-                    dayElement.classList.add('sobriety-day');
+                if (currentDay >= startDate) {
+                    // 現在表示中の月の日付のみスタイルを適用
+                    if (currentDay.getMonth() === month) {
+                        dayElement.classList.add('sobriety-day');
+                    }
+                    
                     const daysDiff = Math.floor((currentDay - startDate) / (1000 * 60 * 60 * 24)) + 1;
                     
-                    if (daysDiff > 0) {
+                    if (daysDiff > 0 && currentDay <= today) {
                         const counter = document.createElement('div');
                         counter.className = 'sobriety-counter';
                         
@@ -183,12 +187,12 @@ class SmartCalendar {
                             // 今日
                             counter.classList.add('today-counter');
                             counter.textContent = `${daysDiff}日目`;
-                        } else {
-                            // 未来の日付（表示しない）
-                            return;
                         }
                         
-                        dayElement.appendChild(counter);
+                        // 現在表示中の月の日付のみカウンターを表示
+                        if (currentDay.getMonth() === month) {
+                            dayElement.appendChild(counter);
+                        }
                     }
                 }
             }
