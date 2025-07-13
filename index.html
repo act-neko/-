@@ -138,48 +138,50 @@
             <span class="close">&times;</span>
             <h3>📊 節約・断酒進捗状況</h3>
             
-            <div class="progress-stats">
-                <div class="progress-stat-card">
-                    <div class="stat-icon">📅</div>
-                    <div class="stat-details">
-                        <span class="stat-value" id="progressMonthlyTotal">¥0</span>
-                        <span class="stat-label">今月の節約額</span>
+            <div class="progress-modal-body">
+                <div class="progress-stats">
+                    <div class="progress-stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-details">
+                            <span class="stat-value" id="progressMonthlyTotal">¥0</span>
+                            <span class="stat-label">今月の節約額</span>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-details">
+                            <span class="stat-value" id="progressTotalSavings">¥0</span>
+                            <span class="stat-label">累計節約額</span>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-stat-card">
+                        <div class="stat-icon">🚭</div>
+                        <div class="stat-details">
+                            <span class="stat-value" id="progressSobrietyDays">0日</span>
+                            <span class="stat-label">断酒継続日数</span>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-stat-card">
+                        <div class="stat-icon">💪</div>
+                        <div class="stat-details">
+                            <span class="stat-value" id="progressSobrietySaved">¥0</span>
+                            <span class="stat-label">断酒で節約</span>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="progress-stat-card">
-                    <div class="stat-icon">💰</div>
-                    <div class="stat-details">
-                        <span class="stat-value" id="progressTotalSavings">¥0</span>
-                        <span class="stat-label">累計節約額</span>
-                    </div>
+                <div class="category-breakdown">
+                    <h4>カテゴリ別内訳</h4>
+                    <div id="categoryChart"></div>
                 </div>
                 
-                <div class="progress-stat-card">
-                    <div class="stat-icon">🚭</div>
-                    <div class="stat-details">
-                        <span class="stat-value" id="progressSobrietyDays">0日</span>
-                        <span class="stat-label">断酒継続日数</span>
-                    </div>
+                <div class="recent-history">
+                    <h4>最近の節約履歴</h4>
+                    <div class="progress-history-list" id="progressHistoryList"></div>
                 </div>
-                
-                <div class="progress-stat-card">
-                    <div class="stat-icon">💪</div>
-                    <div class="stat-details">
-                        <span class="stat-value" id="progressSobrietySaved">¥0</span>
-                        <span class="stat-label">断酒で節約</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="category-breakdown">
-                <h4>カテゴリ別内訳</h4>
-                <div id="categoryChart"></div>
-            </div>
-            
-            <div class="recent-history">
-                <h4>最近の節約履歴</h4>
-                <div class="progress-history-list" id="progressHistoryList"></div>
             </div>
         </div>
     </div>

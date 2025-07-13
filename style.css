@@ -646,6 +646,14 @@ header h1 {
     border: 1px solid #ddd;
     border-radius: 5px;
     outline: none;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+.modal-content input:focus,
+.modal-content textarea:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
 }
 
 .modal-content textarea {
@@ -696,7 +704,32 @@ header h1 {
 .progress-modal-content {
     max-width: 800px;
     max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.progress-modal-content .close {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: white;
+    align-self: flex-end;
+}
+
+.progress-modal-content h3 {
+    position: sticky;
+    top: 0;
+    z-index: 9;
+    background: white;
+    margin: 0 0 20px 0;
+    padding: 20px 0 10px 0;
+}
+
+.progress-modal-body {
+    flex: 1;
     overflow-y: auto;
+    padding-right: 10px;
 }
 
 .progress-stats {
@@ -932,6 +965,14 @@ header h1 {
         margin: 10px;
         max-height: 95vh;
         padding: 20px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .progress-modal-content .progress-modal-body {
+        flex: 1;
+        overflow-y: auto;
     }
     
     .savings-stats {
