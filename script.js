@@ -367,6 +367,64 @@ class SmartCalendar {
         }
     }
 
+    getDailyEncouragementMessage(daysDiff) {
+        // 段階別の基本メッセージ
+        let levelMessage = '';
+        if (daysDiff >= 365) {
+            levelMessage = '🏆 1年以上継続中！';
+        } else if (daysDiff >= 100) {
+            levelMessage = '🎉 100日以上継続中！';
+        } else if (daysDiff >= 30) {
+            levelMessage = '👏 1ヶ月以上継続中！';
+        } else if (daysDiff >= 7) {
+            levelMessage = '✨ 1週間以上継続中！';
+        } else {
+            levelMessage = '💪 頑張って継続中！';
+        }
+        
+        // 毎日変わる応援メッセージ（日付ベース）
+        const today = new Date();
+        const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+        
+        const encouragementMessages = [
+            '今日も一歩前進！',
+            '素晴らしい継続力です！',
+            'あなたの意志の強さに拍手！',
+            '健康への道を歩んでいます！',
+            '毎日の積み重ねが力になる！',
+            '自分を誇りに思ってください！',
+            '新しい習慣が身についてきました！',
+            '心も体も軽やかに！',
+            '目標に向かって順調です！',
+            '明日への希望が輝いています！',
+            'あなたの決意は本物です！',
+            '健康的な毎日を送っています！',
+            '自分らしい生活を楽しんで！',
+            '内側から輝いています！',
+            '新しい自分に出会えました！',
+            '穏やかな心で過ごしています！',
+            '体調の変化を感じていますか？',
+            '精神的な強さが育っています！',
+            '良い選択を続けています！',
+            '前向きなエネルギーが溢れています！',
+            '自制心が鍛えられています！',
+            '健康第一の生活です！',
+            '心の平穏を手に入れました！',
+            '新しい趣味を見つけるチャンス！',
+            '睡眠の質が向上しています！',
+            '集中力がアップしています！',
+            'お財布にも優しい選択！',
+            '家族や友人も応援しています！',
+            '自分への投資を続けています！',
+            '今日という日を大切に！'
+        ];
+        
+        const messageIndex = dayOfYear % encouragementMessages.length;
+        const dailyEncouragement = encouragementMessages[messageIndex];
+        
+        return `${levelMessage} ${dailyEncouragement}`;
+    }
+
     updateSobrietyDisplay() {
         const sobrietyDisplay = document.getElementById('sobrietyDisplay');
         const sobrietyDays = document.getElementById('sobrietyDays');
@@ -379,17 +437,9 @@ class SmartCalendar {
             
             sobrietyDays.textContent = `断酒${daysDiff}日目`;
             
-            if (daysDiff >= 365) {
-                sobrietyMessage.textContent = '🏆 素晴らしい！1年以上継続中！';
-            } else if (daysDiff >= 100) {
-                sobrietyMessage.textContent = '🎉 100日以上継続中！素晴らしいです！';
-            } else if (daysDiff >= 30) {
-                sobrietyMessage.textContent = '👏 1ヶ月以上継続中！その調子です！';
-            } else if (daysDiff >= 7) {
-                sobrietyMessage.textContent = '✨ 1週間以上継続中！頑張ってます！';
-            } else {
-                sobrietyMessage.textContent = '💪 頑張って続けましょう！';
-            }
+            // 毎日変わる応援メッセージを取得
+            const dailyMessage = this.getDailyEncouragementMessage(daysDiff);
+            sobrietyMessage.textContent = dailyMessage;
             
             sobrietyDisplay.style.display = 'block';
         } else {
