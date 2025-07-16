@@ -8,9 +8,25 @@
 </head>
 <body>
     <div class="container">
+        <div class="login-overlay" id="loginOverlay">
+            <div class="login-modal">
+                <h2>📅 スマートカレンダー</h2>
+                <p>ユーザー名を入力してログインしてください</p>
+                <input type="text" id="usernameInput" placeholder="ユーザー名を入力" maxlength="20">
+                <button id="loginBtn" class="login-btn">ログイン</button>
+                <div class="recent-users" id="recentUsers"></div>
+            </div>
+        </div>
+        
         <header>
             <div class="header-top">
-                <h1>スマートカレンダー</h1>
+                <div class="user-info">
+                    <h1>スマートカレンダー</h1>
+                    <div class="current-user">
+                        <span id="currentUsername"></span>
+                        <button id="logoutBtn" class="logout-btn">ログアウト</button>
+                    </div>
+                </div>
                 <div class="header-buttons">
                     <button id="sobrietyBtn" class="sobriety-btn">🚭 断酒設定</button>
                     <button id="progressBtn" class="progress-btn">📊 進捗状況</button>
@@ -31,6 +47,33 @@
             <div class="calendar" id="calendar"></div>
             
             <div class="sidebar" id="sidebar">
+                <div class="monthly-summary" id="monthlySummary">
+                    <h3>📊 今月の概要</h3>
+                    <div class="summary-stats">
+                        <div class="summary-item">
+                            <div class="summary-icon">💰</div>
+                            <div class="summary-details">
+                                <span class="summary-value" id="summaryMonthlyTotal">¥0</span>
+                                <span class="summary-label">今月の節約額</span>
+                            </div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-icon">📅</div>
+                            <div class="summary-details">
+                                <span class="summary-value" id="summaryEventCount">0</span>
+                                <span class="summary-label">今月の予定数</span>
+                            </div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-icon">🎯</div>
+                            <div class="summary-details">
+                                <span class="summary-value" id="summaryDailyAverage">¥0</span>
+                                <span class="summary-label">1日平均節約額</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="day-info" id="dayInfo" style="display: none;">
                     <h3 id="selectedDate"></h3>
                     <div class="events" id="events"></div>
@@ -56,38 +99,6 @@
                     <div class="history-list" id="historyList"></div>
                 </div>
                 
-                <div class="meditation-timer" id="meditationTimer">
-                    <h3>🧘‍♂️ 瞑想タイマー</h3>
-                    
-                    <div class="timer-display" id="timerDisplay">
-                        <div class="time-left" id="timeLeft">05:00</div>
-                        <div class="timer-status" id="timerStatus">時間を選択してください</div>
-                    </div>
-                    
-                    <div class="time-presets">
-                        <button class="preset-btn" data-minutes="3">3分</button>
-                        <button class="preset-btn" data-minutes="5">5分</button>
-                        <button class="preset-btn" data-minutes="10">10分</button>
-                        <button class="preset-btn" data-minutes="15">15分</button>
-                        <button class="preset-btn" data-minutes="20">20分</button>
-                    </div>
-                    
-                    <div class="timer-controls">
-                        <button id="startPauseBtn" class="timer-btn start-btn" disabled>開始</button>
-                        <button id="resetBtn" class="timer-btn reset-btn">リセット</button>
-                    </div>
-                    
-                    <div class="meditation-stats">
-                        <div class="stat-small">
-                            <span>今日の瞑想</span>
-                            <span id="todayMeditation">0分</span>
-                        </div>
-                        <div class="stat-small">
-                            <span>総瞑想時間</span>
-                            <span id="totalMeditation">0分</span>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

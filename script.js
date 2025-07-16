@@ -2,38 +2,147 @@ class SmartCalendar {
     constructor() {
         this.currentDate = new Date();
         this.selectedDate = null;
-        this.events = JSON.parse(localStorage.getItem('calendarEvents')) || {};
-        this.savings = JSON.parse(localStorage.getItem('savingsData')) || [];
-        this.sobrietyStartDate = localStorage.getItem('sobrietyStartDate');
-        this.meditationSessions = JSON.parse(localStorage.getItem('meditationSessions')) || [];
-        this.timerState = {
-            minutes: 5,
-            seconds: 0,
-            isRunning: false,
-            intervalId: null
+        this.currentUser = null;
+        this.events = {};
+        this.savings = [];
+        this.sobrietyStartDate = null;
+        this.checkLogin();
+    }
+
+    checkLogin() {
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            this.currentUser = savedUser;
+            this.loadUserData();
+            this.hideLoginOverlay();
+            this.init();
+        } else {
+            this.showLoginOverlay();
+        }
+    }
+
+    showLoginOverlay() {
+        document.getElementById('loginOverlay').style.display = 'flex';
+        this.renderRecentUsers();
+        this.setupLoginListeners();
+    }
+
+    hideLoginOverlay() {
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('currentUsername').textContent = this.currentUser;
+    }
+
+    setupLoginListeners() {
+        const loginBtn = document.getElementById('loginBtn');
+        const usernameInput = document.getElementById('usernameInput');
+        
+        loginBtn.addEventListener('click', () => {
+            this.login();
+        });
+        
+        usernameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.login();
+            }
+        });
+        
+        usernameInput.focus();
+    }
+
+    login() {
+        const username = document.getElementById('usernameInput').value.trim();
+        if (username) {
+            this.currentUser = username;
+            this.saveCurrentUser();
+            this.loadUserData();
+            this.hideLoginOverlay();
+            this.init();
+        } else {
+            alert('ユーザー名を入力してください');
+        }
+    }
+
+    logout() {
+        this.currentUser = null;
+        localStorage.removeItem('currentUser');
+        this.showLoginOverlay();
+        document.getElementById('usernameInput').value = '';
+    }
+
+    saveCurrentUser() {
+        localStorage.setItem('currentUser', this.currentUser);
+        this.addToRecentUsers(this.currentUser);
+    }
+
+    addToRecentUsers(username) {
+        let recentUsers = JSON.parse(localStorage.getItem('recentUsers')) || [];
+        recentUsers = recentUsers.filter(user => user !== username);
+        recentUsers.unshift(username);
+        recentUsers = recentUsers.slice(0, 5);
+        localStorage.setItem('recentUsers', JSON.stringify(recentUsers));
+    }
+
+    renderRecentUsers() {
+        const recentUsersContainer = document.getElementById('recentUsers');
+        const recentUsers = JSON.parse(localStorage.getItem('recentUsers')) || [];
+        
+        if (recentUsers.length === 0) {
+            recentUsersContainer.innerHTML = '';
+            return;
+        }
+        
+        recentUsersContainer.innerHTML = '<h4>最近使用したユーザー</h4>';
+        recentUsers.forEach(username => {
+            const btn = document.createElement('button');
+            btn.className = 'recent-user-btn';
+            btn.textContent = username;
+            btn.addEventListener('click', () => {
+                document.getElementById('usernameInput').value = username;
+                this.login();
+            });
+            recentUsersContainer.appendChild(btn);
+        });
+    }
+
+    loadUserData() {
+        const userKey = `user_${this.currentUser}`;
+        const userData = JSON.parse(localStorage.getItem(userKey)) || {};
+        
+        this.events = userData.events || {};
+        this.savings = userData.savings || [];
+        this.sobrietyStartDate = userData.sobrietyStartDate || null;
+    }
+
+    saveUserData() {
+        const userKey = `user_${this.currentUser}`;
+        const userData = {
+            events: this.events,
+            savings: this.savings,
+            sobrietyStartDate: this.sobrietyStartDate
         };
-        this.init();
+        localStorage.setItem(userKey, JSON.stringify(userData));
     }
 
     init() {
         this.renderCalendar();
         this.setupEventListeners();
-        this.initializeMeditationTimer();
         this.renderSavingsHistory();
         this.updateSavingsStats();
         this.updateSobrietyDisplay();
-        this.updateMeditationStats();
+        this.updateMonthlySummary();
     }
 
     setupEventListeners() {
         document.getElementById('prevMonth').addEventListener('click', () => {
             this.currentDate.setMonth(this.currentDate.getMonth() - 1);
             this.renderCalendar();
+            this.updateMonthlySummary();
         });
 
         document.getElementById('nextMonth').addEventListener('click', () => {
             this.currentDate.setMonth(this.currentDate.getMonth() + 1);
             this.renderCalendar();
+            this.updateMonthlySummary();
         });
 
         document.getElementById('addEventBtn').addEventListener('click', () => {
@@ -68,26 +177,16 @@ class SmartCalendar {
             this.resetSobriety();
         });
 
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            this.logout();
+        });
+
         document.querySelectorAll('.close').forEach(closeBtn => {
             closeBtn.addEventListener('click', () => {
                 this.closeAllModals();
             });
         });
 
-        // 瞑想タイマーのイベントリスナー
-        document.querySelectorAll('.preset-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.setTimerPreset(parseInt(btn.dataset.minutes));
-            });
-        });
-
-        document.getElementById('startPauseBtn').addEventListener('click', () => {
-            this.toggleTimer();
-        });
-
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            this.resetTimer();
-        });
 
         window.addEventListener('click', (e) => {
             const eventModal = document.getElementById('eventModal');
@@ -139,7 +238,17 @@ class SmartCalendar {
             
             const dayElement = document.createElement('div');
             dayElement.className = 'calendar-day';
-            dayElement.textContent = currentDay.getDate();
+            
+            // Day number
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'calendar-day-number';
+            dayNumber.textContent = currentDay.getDate();
+            dayElement.appendChild(dayNumber);
+            
+            // Day info container
+            const dayInfoContainer = document.createElement('div');
+            dayInfoContainer.className = 'calendar-day-info';
+            dayElement.appendChild(dayInfoContainer);
             
             const dateKey = this.getDateKey(currentDay);
             const today = new Date();
@@ -155,11 +264,27 @@ class SmartCalendar {
                 dayElement.classList.add('today');
             }
             
+            // Display events count
             if (this.events[dateKey] && this.events[dateKey].length > 0) {
                 dayElement.classList.add('has-events');
-                const dot = document.createElement('div');
-                dot.className = 'event-dot';
-                dayElement.appendChild(dot);
+                const eventsCount = document.createElement('div');
+                eventsCount.className = 'day-events-count';
+                eventsCount.textContent = `${this.events[dateKey].length}件`;
+                dayInfoContainer.appendChild(eventsCount);
+            }
+            
+            // Display savings for this day
+            const daySavings = this.savings.filter(saving => {
+                const savingDate = new Date(saving.date);
+                return this.getDateKey(savingDate) === dateKey;
+            });
+            
+            if (daySavings.length > 0) {
+                const totalSavings = daySavings.reduce((sum, saving) => sum + saving.amount, 0);
+                const savingsElement = document.createElement('div');
+                savingsElement.className = 'day-savings';
+                savingsElement.textContent = `¥${totalSavings.toLocaleString()}`;
+                dayInfoContainer.appendChild(savingsElement);
             }
 
             if (this.sobrietyStartDate) {
@@ -237,8 +362,14 @@ class SmartCalendar {
                 const eventElement = document.createElement('div');
                 eventElement.className = 'event-item';
                 eventElement.innerHTML = `
-                    <div class="event-title">${event.title}</div>
-                    <div class="event-description">${event.description}</div>
+                    <div class="event-content">
+                        <div class="event-title">${event.title}</div>
+                        <div class="event-description">${event.description}</div>
+                    </div>
+                    <div class="event-actions">
+                        <button class="edit-btn" onclick="calendar.editEvent('${event.id}')">✏️</button>
+                        <button class="delete-btn" onclick="calendar.deleteEvent('${event.id}')">🗑️</button>
+                    </div>
                 `;
                 eventsContainer.appendChild(eventElement);
             });
@@ -260,11 +391,13 @@ class SmartCalendar {
         document.getElementById('eventModal').style.display = 'none';
         document.getElementById('eventTitle').value = '';
         document.getElementById('eventDescription').value = '';
+        delete document.getElementById('eventModal').dataset.editId;
     }
 
     saveEvent() {
         const title = document.getElementById('eventTitle').value.trim();
         const description = document.getElementById('eventDescription').value.trim();
+        const editId = document.getElementById('eventModal').dataset.editId;
         
         if (!title) {
             alert('タイトルを入力してください');
@@ -282,17 +415,28 @@ class SmartCalendar {
             this.events[dateKey] = [];
         }
         
-        this.events[dateKey].push({
-            title: title,
-            description: description,
-            id: Date.now()
-        });
+        if (editId) {
+            // Edit existing event
+            const eventIndex = this.events[dateKey].findIndex(e => e.id == editId);
+            if (eventIndex !== -1) {
+                this.events[dateKey][eventIndex].title = title;
+                this.events[dateKey][eventIndex].description = description;
+            }
+        } else {
+            // Add new event
+            this.events[dateKey].push({
+                title: title,
+                description: description,
+                id: Date.now()
+            });
+        }
         
-        localStorage.setItem('calendarEvents', JSON.stringify(this.events));
+        this.saveUserData();
         
         this.closeEventModal();
         this.renderCalendar();
         this.showDayInfo(this.selectedDate);
+        this.updateMonthlySummary();
     }
 
     getDateKey(date) {
@@ -313,6 +457,7 @@ class SmartCalendar {
         document.getElementById('savingAmount').value = '';
         document.getElementById('savingCategory').value = '食費';
         document.getElementById('savingDescription').value = '';
+        delete document.getElementById('savingModal').dataset.editId;
     }
 
     closeAllModals() {
@@ -350,7 +495,7 @@ class SmartCalendar {
         }
         
         this.sobrietyStartDate = startDate;
-        localStorage.setItem('sobrietyStartDate', startDate);
+        this.saveUserData();
         
         this.closeSobrietyModal();
         this.renderCalendar();
@@ -360,7 +505,7 @@ class SmartCalendar {
     resetSobriety() {
         if (confirm('断酒記録をリセットしますか？')) {
             this.sobrietyStartDate = null;
-            localStorage.removeItem('sobrietyStartDate');
+            this.saveUserData();
             this.closeSobrietyModal();
             this.renderCalendar();
             this.updateSobrietyDisplay();
@@ -451,6 +596,7 @@ class SmartCalendar {
         const amount = parseInt(document.getElementById('savingAmount').value);
         const category = document.getElementById('savingCategory').value;
         const description = document.getElementById('savingDescription').value.trim();
+        const editId = document.getElementById('savingModal').dataset.editId;
         
         if (!amount || amount <= 0) {
             alert('有効な金額を入力してください');
@@ -462,23 +608,37 @@ class SmartCalendar {
             return;
         }
         
-        const saving = {
-            id: Date.now(),
-            date: new Date(this.selectedDate),
-            amount: amount,
-            category: category,
-            description: description
-        };
+        if (editId) {
+            // Edit existing saving
+            const savingIndex = this.savings.findIndex(s => s.id == editId);
+            if (savingIndex !== -1) {
+                this.savings[savingIndex].amount = amount;
+                this.savings[savingIndex].category = category;
+                this.savings[savingIndex].description = description;
+            }
+        } else {
+            // Add new saving
+            const saving = {
+                id: Date.now(),
+                date: new Date(this.selectedDate),
+                amount: amount,
+                category: category,
+                description: description
+            };
+            
+            this.savings.push(saving);
+        }
         
-        this.savings.push(saving);
         this.savings.sort((a, b) => new Date(b.date) - new Date(a.date));
         
-        localStorage.setItem('savingsData', JSON.stringify(this.savings));
+        this.saveUserData();
         
         this.closeSavingModal();
+        this.renderCalendar();
         this.renderSavingsHistory();
         this.updateSavingsStats();
         this.showDaySavings(this.selectedDate);
+        this.updateMonthlySummary();
     }
 
     showDaySavings(date) {
@@ -502,8 +662,14 @@ class SmartCalendar {
                 const savingElement = document.createElement('div');
                 savingElement.className = 'saving-item';
                 savingElement.innerHTML = `
-                    <div class="saving-amount">¥${saving.amount.toLocaleString()}</div>
-                    <div class="saving-category">${saving.category} - ${saving.description}</div>
+                    <div class="saving-content">
+                        <div class="saving-amount">¥${saving.amount.toLocaleString()}</div>
+                        <div class="saving-category">${saving.category} - ${saving.description}</div>
+                    </div>
+                    <div class="saving-actions">
+                        <button class="edit-btn" onclick="calendar.editSaving('${saving.id}')">✏️</button>
+                        <button class="delete-btn" onclick="calendar.deleteSaving('${saving.id}')">🗑️</button>
+                    </div>
                 `;
                 savingsInfo.appendChild(savingElement);
             });
@@ -527,12 +693,18 @@ class SmartCalendar {
             const formattedDate = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
             
             historyItem.innerHTML = `
-                <div class="history-header">
-                    <span class="history-amount">¥${saving.amount.toLocaleString()}</span>
-                    <span class="history-date">${formattedDate}</span>
+                <div class="history-content">
+                    <div class="history-header">
+                        <span class="history-amount">¥${saving.amount.toLocaleString()}</span>
+                        <span class="history-date">${formattedDate}</span>
+                    </div>
+                    <div class="history-category">${saving.category}</div>
+                    <div class="history-description">${saving.description}</div>
                 </div>
-                <div class="history-category">${saving.category}</div>
-                <div class="history-description">${saving.description}</div>
+                <div class="history-actions">
+                    <button class="edit-btn" onclick="calendar.editSaving('${saving.id}')">✏️</button>
+                    <button class="delete-btn" onclick="calendar.deleteSaving('${saving.id}')">🗑️</button>
+                </div>
             `;
             
             historyList.appendChild(historyItem);
@@ -555,152 +727,92 @@ class SmartCalendar {
         document.getElementById('totalSavings').textContent = `¥${totalSavings.toLocaleString()}`;
     }
 
-    initializeMeditationTimer() {
-        this.updateTimerDisplay();
-        this.updateMeditationStats();
+    updateMonthlySummary() {
+        const viewedMonth = this.currentDate.getMonth();
+        const viewedYear = this.currentDate.getFullYear();
+        
+        // Calculate monthly savings
+        const monthlyTotal = this.savings.filter(saving => {
+            const date = new Date(saving.date);
+            return date.getMonth() === viewedMonth && date.getFullYear() === viewedYear;
+        }).reduce((sum, saving) => sum + saving.amount, 0);
+        
+        // Calculate monthly events count
+        const monthlyEvents = Object.keys(this.events).filter(dateKey => {
+            const [year, month] = dateKey.split('-');
+            return parseInt(month) === viewedMonth && parseInt(year) === viewedYear;
+        }).reduce((count, dateKey) => {
+            return count + this.events[dateKey].length;
+        }, 0);
+        
+        // Calculate daily average
+        const daysInMonth = new Date(viewedYear, viewedMonth + 1, 0).getDate();
+        const isCurrentMonth = viewedMonth === new Date().getMonth() && viewedYear === new Date().getFullYear();
+        const daysToUse = isCurrentMonth ? new Date().getDate() : daysInMonth;
+        const dailyAverage = monthlyTotal > 0 ? Math.round(monthlyTotal / daysToUse) : 0;
+        
+        // Update summary elements
+        document.getElementById('summaryMonthlyTotal').textContent = `¥${monthlyTotal.toLocaleString()}`;
+        document.getElementById('summaryEventCount').textContent = `${monthlyEvents}件`;
+        document.getElementById('summaryDailyAverage').textContent = `¥${dailyAverage.toLocaleString()}`;
     }
 
-    setTimerPreset(minutes) {
-        this.timerState.minutes = minutes;
-        this.timerState.seconds = 0;
-        this.timerState.isRunning = false;
-        
-        // プリセットボタンのアクティブ状態を更新
-        document.querySelectorAll('.preset-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        document.querySelector(`[data-minutes="${minutes}"]`).classList.add('active');
-        
-        // 開始ボタンを有効化
-        document.getElementById('startPauseBtn').disabled = false;
-        document.getElementById('startPauseBtn').textContent = '開始';
-        
-        this.updateTimerDisplay();
-        document.getElementById('timerStatus').textContent = `${minutes}分の瞑想を開始できます`;
-    }
-
-    toggleTimer() {
-        if (this.timerState.isRunning) {
-            this.pauseTimer();
-        } else {
-            this.startTimer();
-        }
-    }
-
-    startTimer() {
-        this.timerState.isRunning = true;
-        document.getElementById('startPauseBtn').textContent = '一時停止';
-        document.getElementById('timerStatus').textContent = '瞑想中...';
-        
-        // プリセットボタンを無効化
-        document.querySelectorAll('.preset-btn').forEach(btn => {
-            btn.disabled = true;
-        });
-        
-        this.timerState.intervalId = setInterval(() => {
-            if (this.timerState.seconds > 0) {
-                this.timerState.seconds--;
-            } else if (this.timerState.minutes > 0) {
-                this.timerState.minutes--;
-                this.timerState.seconds = 59;
-            } else {
-                this.completeTimer();
-                return;
+    deleteEvent(eventId) {
+        if (confirm('この予定を削除しますか？')) {
+            const dateKey = this.getDateKey(this.selectedDate);
+            if (this.events[dateKey]) {
+                this.events[dateKey] = this.events[dateKey].filter(event => event.id != eventId);
+                if (this.events[dateKey].length === 0) {
+                    delete this.events[dateKey];
+                }
+                this.saveUserData();
+                this.renderCalendar();
+                this.showDayInfo(this.selectedDate);
+                this.updateMonthlySummary();
             }
-            this.updateTimerDisplay();
-        }, 1000);
-    }
-
-    pauseTimer() {
-        this.timerState.isRunning = false;
-        clearInterval(this.timerState.intervalId);
-        document.getElementById('startPauseBtn').textContent = '再開';
-        document.getElementById('timerStatus').textContent = '一時停止中';
-    }
-
-    resetTimer() {
-        this.timerState.isRunning = false;
-        clearInterval(this.timerState.intervalId);
-        this.timerState.minutes = 5;
-        this.timerState.seconds = 0;
-        
-        document.getElementById('startPauseBtn').textContent = '開始';
-        document.getElementById('startPauseBtn').disabled = true;
-        document.getElementById('timerStatus').textContent = '時間を選択してください';
-        
-        // プリセットボタンを有効化してリセット
-        document.querySelectorAll('.preset-btn').forEach(btn => {
-            btn.disabled = false;
-            btn.classList.remove('active');
-        });
-        
-        this.updateTimerDisplay();
-    }
-
-    completeTimer() {
-        this.timerState.isRunning = false;
-        clearInterval(this.timerState.intervalId);
-        
-        // 瞑想セッションを記録
-        const activePreset = document.querySelector('.preset-btn.active');
-        const duration = activePreset ? parseInt(activePreset.dataset.minutes) : 5;
-        
-        this.recordMeditationSession(duration);
-        
-        document.getElementById('timerStatus').textContent = '🎉 瞑想完了！お疲れ様でした';
-        document.getElementById('startPauseBtn').disabled = true;
-        
-        // 完了音（ブラウザのbeep音）
-        if ('AudioContext' in window || 'webkitAudioContext' in window) {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = 800;
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.5);
         }
-        
-        // 3秒後にリセット
-        setTimeout(() => {
-            this.resetTimer();
-        }, 3000);
     }
 
-    updateTimerDisplay() {
-        const minutes = this.timerState.minutes.toString().padStart(2, '0');
-        const seconds = this.timerState.seconds.toString().padStart(2, '0');
-        document.getElementById('timeLeft').textContent = `${minutes}:${seconds}`;
+    editEvent(eventId) {
+        const dateKey = this.getDateKey(this.selectedDate);
+        const event = this.events[dateKey]?.find(e => e.id == eventId);
+        if (event) {
+            document.getElementById('eventTitle').value = event.title;
+            document.getElementById('eventDescription').value = event.description;
+            
+            // Store the event ID for editing
+            document.getElementById('eventModal').dataset.editId = eventId;
+            document.getElementById('eventModal').style.display = 'flex';
+            document.getElementById('eventTitle').focus();
+        }
     }
 
-    recordMeditationSession(duration) {
-        const session = {
-            date: new Date().toDateString(),
-            duration: duration,
-            timestamp: Date.now()
-        };
-        
-        this.meditationSessions.push(session);
-        localStorage.setItem('meditationSessions', JSON.stringify(this.meditationSessions));
-        this.updateMeditationStats();
+    deleteSaving(savingId) {
+        if (confirm('この節約記録を削除しますか？')) {
+            this.savings = this.savings.filter(saving => saving.id != savingId);
+            this.saveUserData();
+            this.renderCalendar();
+            this.renderSavingsHistory();
+            this.updateSavingsStats();
+            if (this.selectedDate) {
+                this.showDaySavings(this.selectedDate);
+            }
+            this.updateMonthlySummary();
+        }
     }
 
-    updateMeditationStats() {
-        const today = new Date().toDateString();
-        const todayMinutes = this.meditationSessions
-            .filter(session => session.date === today)
-            .reduce((total, session) => total + session.duration, 0);
-        
-        const totalMinutes = this.meditationSessions
-            .reduce((total, session) => total + session.duration, 0);
-        
-        document.getElementById('todayMeditation').textContent = `${todayMinutes}分`;
-        document.getElementById('totalMeditation').textContent = `${totalMinutes}分`;
+    editSaving(savingId) {
+        const saving = this.savings.find(s => s.id == savingId);
+        if (saving) {
+            document.getElementById('savingAmount').value = saving.amount;
+            document.getElementById('savingCategory').value = saving.category;
+            document.getElementById('savingDescription').value = saving.description;
+            
+            // Store the saving ID for editing
+            document.getElementById('savingModal').dataset.editId = savingId;
+            document.getElementById('savingModal').style.display = 'flex';
+            document.getElementById('savingAmount').focus();
+        }
     }
 
     getSavingsThisMonth() {
@@ -839,5 +951,5 @@ class SmartCalendar {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    new SmartCalendar();
+    window.calendar = new SmartCalendar();
 });
