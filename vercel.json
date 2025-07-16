@@ -1,10 +1,9 @@
 {
-  "name": "smart-calendar",
   "version": 2,
-  "public": true,
+  "name": "smart-calendar",
   "builds": [
     {
-      "src": "index.html",
+      "src": "**",
       "use": "@vercel/static"
     }
   ],
