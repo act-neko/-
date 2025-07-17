@@ -71,6 +71,13 @@
                                 <span class="summary-label">1日平均節約額</span>
                             </div>
                         </div>
+                        <div class="summary-item">
+                            <div class="summary-icon">⚖️</div>
+                            <div class="summary-details">
+                                <span class="summary-value" id="summaryLatestWeight">-</span>
+                                <span class="summary-label">最新体重</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -80,8 +87,10 @@
                     <div class="button-group">
                         <button id="addEventBtn">予定を追加</button>
                         <button id="addSavingBtn">節約記録</button>
+                        <button id="addWeightBtn">⚖️ 体重記録</button>
                     </div>
                     <div class="savings-info" id="savingsInfo"></div>
+                    <div class="weight-info" id="weightInfo"></div>
                 </div>
                 
                 <div class="savings-history" id="savingsHistory" style="display: none;">
@@ -128,6 +137,16 @@
             </select>
             <textarea id="savingDescription" placeholder="節約の内容"></textarea>
             <button id="saveSaving">保存</button>
+        </div>
+    </div>
+
+    <div class="modal" id="weightModal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>⚖️ 体重記録</h3>
+            <input type="number" id="weightValue" placeholder="体重（kg）" step="0.1" min="0" max="300">
+            <textarea id="weightNote" placeholder="メモ（任意）"></textarea>
+            <button id="saveWeight">保存</button>
         </div>
     </div>
 

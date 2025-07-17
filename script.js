@@ -5,6 +5,7 @@ class SmartCalendar {
         this.currentUser = null;
         this.events = {};
         this.savings = [];
+        this.weights = [];
         this.sobrietyStartDate = null;
         this.checkLogin();
     }
@@ -110,6 +111,7 @@ class SmartCalendar {
         
         this.events = userData.events || {};
         this.savings = userData.savings || [];
+        this.weights = userData.weights || [];
         this.sobrietyStartDate = userData.sobrietyStartDate || null;
     }
 
@@ -118,6 +120,7 @@ class SmartCalendar {
         const userData = {
             events: this.events,
             savings: this.savings,
+            weights: this.weights,
             sobrietyStartDate: this.sobrietyStartDate
         };
         localStorage.setItem(userKey, JSON.stringify(userData));
@@ -153,6 +156,10 @@ class SmartCalendar {
             this.openSavingModal();
         });
 
+        document.getElementById('addWeightBtn').addEventListener('click', () => {
+            this.openWeightModal();
+        });
+
         document.getElementById('progressBtn').addEventListener('click', () => {
             this.openProgressModal();
         });
@@ -167,6 +174,10 @@ class SmartCalendar {
 
         document.getElementById('saveSaving').addEventListener('click', () => {
             this.saveSaving();
+        });
+
+        document.getElementById('saveWeight').addEventListener('click', () => {
+            this.saveWeight();
         });
 
         document.getElementById('setSobrietyStart').addEventListener('click', () => {
@@ -273,6 +284,20 @@ class SmartCalendar {
                 dayInfoContainer.appendChild(eventsCount);
             }
             
+            // Display weight for this day
+            const dayWeights = this.weights.filter(weight => {
+                const weightDate = new Date(weight.date);
+                return this.getDateKey(weightDate) === dateKey;
+            });
+            
+            if (dayWeights.length > 0) {
+                const latestWeight = dayWeights[0];
+                const weightElement = document.createElement('div');
+                weightElement.className = 'day-weight';
+                weightElement.textContent = `${latestWeight.weight}kg`;
+                dayInfoContainer.appendChild(weightElement);
+            }
+            
             // Display savings for this day
             const daySavings = this.savings.filter(saving => {
                 const savingDate = new Date(saving.date);
@@ -341,6 +366,7 @@ class SmartCalendar {
         
         this.showDayInfo(date);
         this.showDaySavings(date);
+        this.showDayWeights(date);
     }
 
     showDayInfo(date) {
@@ -460,9 +486,26 @@ class SmartCalendar {
         delete document.getElementById('savingModal').dataset.editId;
     }
 
+    openWeightModal() {
+        if (!this.selectedDate) {
+            alert('日付を選択してください');
+            return;
+        }
+        document.getElementById('weightModal').style.display = 'flex';
+        document.getElementById('weightValue').focus();
+    }
+
+    closeWeightModal() {
+        document.getElementById('weightModal').style.display = 'none';
+        document.getElementById('weightValue').value = '';
+        document.getElementById('weightNote').value = '';
+        delete document.getElementById('weightModal').dataset.editId;
+    }
+
     closeAllModals() {
         this.closeEventModal();
         this.closeSavingModal();
+        this.closeWeightModal();
         this.closeProgressModal();
         this.closeSobrietyModal();
     }
@@ -641,6 +684,50 @@ class SmartCalendar {
         this.updateMonthlySummary();
     }
 
+    saveWeight() {
+        const weight = parseFloat(document.getElementById('weightValue').value);
+        const note = document.getElementById('weightNote').value.trim();
+        const editId = document.getElementById('weightModal').dataset.editId;
+        
+        if (!weight || weight <= 0 || weight > 300) {
+            alert('有効な体重を入力してください（0〜300kg）');
+            return;
+        }
+        
+        if (!this.selectedDate) {
+            alert('日付を選択してください');
+            return;
+        }
+        
+        if (editId) {
+            // Edit existing weight
+            const weightIndex = this.weights.findIndex(w => w.id == editId);
+            if (weightIndex !== -1) {
+                this.weights[weightIndex].weight = weight;
+                this.weights[weightIndex].note = note;
+            }
+        } else {
+            // Add new weight
+            const weightRecord = {
+                id: Date.now(),
+                date: new Date(this.selectedDate),
+                weight: weight,
+                note: note
+            };
+            
+            this.weights.push(weightRecord);
+        }
+        
+        this.weights.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        this.saveUserData();
+        
+        this.closeWeightModal();
+        this.renderCalendar();
+        this.showDayWeights(this.selectedDate);
+        this.updateMonthlySummary();
+    }
+
     showDaySavings(date) {
         const savingsInfo = document.getElementById('savingsInfo');
         const dateKey = this.getDateKey(date);
@@ -672,6 +759,41 @@ class SmartCalendar {
                     </div>
                 `;
                 savingsInfo.appendChild(savingElement);
+            });
+        }
+    }
+
+    showDayWeights(date) {
+        const weightInfo = document.getElementById('weightInfo');
+        const dateKey = this.getDateKey(date);
+        
+        const dayWeights = this.weights.filter(weight => {
+            const weightDate = new Date(weight.date);
+            return this.getDateKey(weightDate) === dateKey;
+        });
+        
+        weightInfo.innerHTML = '';
+        
+        if (dayWeights.length > 0) {
+            const latestWeight = dayWeights[0];
+            weightInfo.innerHTML = `
+                <h4 style="color: #17a2b8; margin-bottom: 10px;">この日の体重: ${latestWeight.weight}kg</h4>
+            `;
+            
+            dayWeights.forEach(weight => {
+                const weightElement = document.createElement('div');
+                weightElement.className = 'weight-item';
+                weightElement.innerHTML = `
+                    <div class="weight-content">
+                        <div class="weight-value">${weight.weight}kg</div>
+                        <div class="weight-note">${weight.note}</div>
+                    </div>
+                    <div class="weight-actions">
+                        <button class="edit-btn" onclick="calendar.editWeight('${weight.id}')">✏️</button>
+                        <button class="delete-btn" onclick="calendar.deleteWeight('${weight.id}')">🗑️</button>
+                    </div>
+                `;
+                weightInfo.appendChild(weightElement);
             });
         }
     }
@@ -751,10 +873,14 @@ class SmartCalendar {
         const daysToUse = isCurrentMonth ? new Date().getDate() : daysInMonth;
         const dailyAverage = monthlyTotal > 0 ? Math.round(monthlyTotal / daysToUse) : 0;
         
+        // Get latest weight
+        const latestWeight = this.weights.length > 0 ? this.weights[0].weight : null;
+        
         // Update summary elements
         document.getElementById('summaryMonthlyTotal').textContent = `¥${monthlyTotal.toLocaleString()}`;
         document.getElementById('summaryEventCount').textContent = `${monthlyEvents}件`;
         document.getElementById('summaryDailyAverage').textContent = `¥${dailyAverage.toLocaleString()}`;
+        document.getElementById('summaryLatestWeight').textContent = latestWeight ? `${latestWeight}kg` : '-';
     }
 
     deleteEvent(eventId) {
@@ -812,6 +938,29 @@ class SmartCalendar {
             document.getElementById('savingModal').dataset.editId = savingId;
             document.getElementById('savingModal').style.display = 'flex';
             document.getElementById('savingAmount').focus();
+        }
+    }
+
+    editWeight(weightId) {
+        const weight = this.weights.find(w => w.id == weightId);
+        if (weight) {
+            document.getElementById('weightValue').value = weight.weight;
+            document.getElementById('weightNote').value = weight.note;
+            
+            // Store the weight ID for editing
+            document.getElementById('weightModal').dataset.editId = weightId;
+            document.getElementById('weightModal').style.display = 'flex';
+            document.getElementById('weightValue').focus();
+        }
+    }
+
+    deleteWeight(weightId) {
+        if (confirm('この体重記録を削除しますか？')) {
+            this.weights = this.weights.filter(w => w.id != weightId);
+            this.saveUserData();
+            this.renderCalendar();
+            this.showDayWeights(this.selectedDate);
+            this.updateMonthlySummary();
         }
     }
 
